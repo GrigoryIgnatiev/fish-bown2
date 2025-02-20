@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задание</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e0e0e0;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .line {
+            position: absolute;
+            top: 400px;
+            left: 10px;
+            width: 1000px;
+            border-top: 6px solid rgb(132, 132, 132);
+        }
+
+        .text-container {
+            position: absolute;
+            cursor: grab;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: white;
+        }
+
+        .text-container.selected {
+            outline: 2px solid rgb(230, 0, 0);
+        }
+
+        .text-input {
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            color: black;
+            outline: none;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .underline {
+            width: 100%;
+            height: 2px;
+            background-color: black;
+            margin-top: 5px;
+            pointer-events: none;
+        }
+
+        .input-box {
+            position: absolute;
+            top: 360px;
+            left: 1030px;
+            background-color: #1E90FF;
+            border: 5px solid #1E90FF;
+            padding: 10px;
+            height: 50px;
+            width: 140px;
+            color: white;
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        .input-box::placeholder {
+            color: white;
+            opacity: 1;
+        }
+
+        .container {
+            position: relative;
+            height: 100%;
+        }
+
+        .toggle-button {
+            background-color: grey;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .task-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 250px;
+            height: 100%;
+            background-color: #777474;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+            transform: translateX(100%);
+            transition: transform 0.5s;
+        }
+
+        .task-panel.visible {
+            transform: translateX(0);
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 20px;
+        }
+
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+        }
+
+        .color-picker {
+            margin-top: 10px;
+        }
+
+        .stick-container {
+            position: absolute;
+            cursor: grab;
+        }
+
+        .stick {
+            width: 290px;
+            height: 6px;
+            background-color: #333;
+            transform: rotate(45deg);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0 0;
+        }
+
+        .square {
+            width: 130px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+            top: -60px; 
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white; 
+            font-size: 14px;
+            padding: 5px;
+            box-sizing: border-box;
+            resize: none;
+            border: none;
+            outline: none;
+        }
+
+        .mirror {
+            transform: scaleY(-1); 
+        }
+    </style>
+</head>
+<body>
+    <div class="line"></div>
+    <input type="text" id="letter-input" class="input-box" placeholder="название" />
+
+    <div class="container">
+        <button class="toggle-button">☰</button>
+        <div class="task-panel" id="taskPanel">
+            <ul>
+                <li><button id="addBoneButton">Добавить кость</button></li>
+                <li><button id="deleteBoneButton">Удалить кость</button></li>
+                <li><button id="addTask2Button">Задача2</button></li>
+                <li><button id="deleteTask2Button">Удалить задачу2</button></li>
+                <li><button>Завершить редактирование</button></li>
+                <li><button>Скрыть выполненное ✔️</button></li>
+            </ul>
+            <div class="color-picker">
+                <label for="backgroundColorPicker">Выберите цвет фона:</label>
+                <input type="color" id="backgroundColorPicker" value="#ffffff">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('.toggle-button').addEventListener('click', function() {
+            const panel = document.getElementById('taskPanel');
+            panel.classList.toggle('visible');
+        });
+
+        let selectedElement = null; 
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        const task2Positions = [];
+
+    
+        function findAvailablePosition() {
+            const step = 200; 
+            let position = 100; 
+
+            while (task2Positions.includes(position)) {
+                position += step;
+            }
+
+            task2Positions.push(position); 
+            return position;
+        }
+
+        document.getElementById('addBoneButton').addEventListener('click', function() {
+            const textContainer = document.createElement('div');
+            textContainer.classList.add('text-container');
+            textContainer.style.left = '100px'; 
+            textContainer.style.top = '100px'; 
+
+            const backgroundColor = document.getElementById('backgroundColorPicker').value;
+            textContainer.style.backgroundColor = backgroundColor;
+
+            const textInput = document.createElement('input');
+            textInput.classList.add('text-input');
+            textInput.type = 'text';
+            textInput.value = 'Текст';
+            textInput.style.width = `${textInput.value.length * 10}px`;
+
+            const underline = document.createElement('div');
+            underline.classList.add('underline');
+
+            textContainer.appendChild(textInput);
+            textContainer.appendChild(underline);
+            document.body.appendChild(textContainer);
+
+            textContainer.addEventListener('click', function(event) {
+                event.stopPropagation(); 
+                if (selectedElement) {
+                    selectedElement.classList.remove('selected'); 
+                }
+                selectedElement = textContainer;
+                selectedElement.classList.add('selected'); 
+                textInput.focus();
+                textInput.select();
+            });
+
+            textContainer.addEventListener('mousedown', function(event) {
+                isDragging = true;
+                startX = event.clientX;
+                startY = event.clientY;
+                initialX = textContainer.offsetLeft;
+                initialY = textContainer.offsetTop;
+                textContainer.style.cursor = 'grabbing';
+            });
+
+            textInput.addEventListener('input', function() {
+                textInput.style.width = `${textInput.value.length * 10}px`;
+            });
+        });
+
+        document.getElementById('addTask2Button').addEventListener('click', function() {
+            const position = findAvailablePosition();
+
+            const stickContainerTop = document.createElement('div');
+            stickContainerTop.classList.add('stick-container');
+            stickContainerTop.style.left = `${position}px`; 
+            stickContainerTop.style.top = '180px'; 
+
+            const squareTop = document.createElement('textarea');
+            squareTop.classList.add('square');
+            squareTop.placeholder = 'Введите текст';
+
+            const stickTop = document.createElement('div');
+            stickTop.classList.add('stick');
+
+            stickContainerTop.appendChild(squareTop);
+            stickContainerTop.appendChild(stickTop);
+            document.body.appendChild(stickContainerTop);
+
+            const stickContainerBottom = document.createElement('div');
+            stickContainerBottom.classList.add('stick-container', 'mirror');
+            stickContainerBottom.style.left = `${position}px`; 
+            stickContainerBottom.style.top = '520px'; 
+
+            const squareBottom = document.createElement('textarea');
+            squareBottom.classList.add('square');
+            squareBottom.placeholder = 'Введите текст';
+
+            const stickBottom = document.createElement('div');
+            stickBottom.classList.add('stick');
+
+            stickContainerBottom.appendChild(squareBottom);
+            stickContainerBottom.appendChild(stickBottom);
+            document.body.appendChild(stickContainerBottom);
+
+            const backgroundColor = document.getElementById('backgroundColorPicker').value;
+            squareTop.style.backgroundColor = backgroundColor;
+            squareBottom.style.backgroundColor = backgroundColor;
+
+            stickContainerTop.addEventListener('click', function(event) {
+                event.stopPropagation(); 
+                if (selectedElement) {
+                    selectedElement.classList.remove('selected'); 
+                }
+                selectedElement = stickContainerTop;
+                selectedElement.classList.add('selected'); 
+            });
+
+            stickContainerBottom.addEventListener('click', function(event) {
+                event.stopPropagation(); 
+                if (selectedElement) {
+                    selectedElement.classList.remove('selected'); 
+                }
+                selectedElement = stickContainerBottom;
+                selectedElement.classList.add('selected'); 
+            });
+        });
+
+        
+        document.getElementById('deleteTask2Button').addEventListener('click', function() {
+            if (selectedElement && selectedElement.classList.contains('stick-container')) {
+                // Удаляем позицию из массива
+                const position = parseInt(selectedElement.style.left);
+                const index = task2Positions.indexOf(position);
+                if (index !== -1) {
+                    task2Positions.splice(index, 1);
+                }
+
+                const mirrorElement = document.querySelector(`.stick-container[style*="left: ${position}px"].mirror`);
+                if (mirrorElement) {
+                    mirrorElement.remove();
+                }
+                selectedElement.remove(); 
+                selectedElement = null;
+            } else {
+                alert('Сначала выберите задачу2 для удаления!');
+            }
+        });
+
+        document.addEventListener('mousemove', function(event) {
+            if (isDragging && selectedElement) {
+                const deltaX = event.clientX - startX;
+                const deltaY = event.clientY - startY;
+                selectedElement.style.left = `${initialX + deltaX}px`;
+                selectedElement.style.top = `${initialY + deltaY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            if (selectedElement) {
+                selectedElement.style.cursor = 'grab';
+            }
+        });
+
+        document.getElementById('deleteBoneButton').addEventListener('click', function() {
+            if (selectedElement && selectedElement.classList.contains('text-container')) {
+                selectedElement.remove(); 
+                selectedElement = null;
+            } else {
+                alert('Сначала выберите кость для удаления!');
+            }
+        });
+
+        document.addEventListener('click', function(event) {
+            if (selectedElement && !event.target.classList.contains('text-container') && !event.target.classList.contains('stick-container')) {
+                selectedElement.classList.remove('selected');
+                selectedElement = null;
+            }
+        });
+    </script>
+</body>
+</html>
