@@ -148,13 +148,13 @@
             height: 50px;
             background-color: red;
             position: absolute;
-            top: -60px; 
+            top: -60px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white; 
+            color: black;
             font-size: 14px;
             padding: 5px;
             box-sizing: border-box;
@@ -163,8 +163,36 @@
             outline: none;
         }
 
-        .mirror {
-            transform: scaleY(-1); 
+        .stick-container.bottom {
+            top: 400px; 
+        }
+
+        .stick-container.bottom .stick {
+            transform: rotate(-45deg); 
+        }
+
+        .stick-container.bottom .square {
+            top: 10px; 
+        }
+
+        .button-group {
+            position: absolute;
+            display: flex;
+            gap: 5px; 
+        }
+
+        .add-input-button {
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -196,30 +224,29 @@
             panel.classList.toggle('visible');
         });
 
-        let selectedElement = null; 
+        let selectedElement = null;
         let isDragging = false;
         let startX, startY, initialX, initialY;
 
         const task2Positions = [];
 
-    
         function findAvailablePosition() {
-            const step = 200; 
-            let position = 100; 
+            const step = 200;
+            let position = 100;
 
             while (task2Positions.includes(position)) {
                 position += step;
             }
 
-            task2Positions.push(position); 
+            task2Positions.push(position);
             return position;
         }
 
         document.getElementById('addBoneButton').addEventListener('click', function() {
             const textContainer = document.createElement('div');
             textContainer.classList.add('text-container');
-            textContainer.style.left = '100px'; 
-            textContainer.style.top = '100px'; 
+            textContainer.style.left = '100px';
+            textContainer.style.top = '100px';
 
             const backgroundColor = document.getElementById('backgroundColorPicker').value;
             textContainer.style.backgroundColor = backgroundColor;
@@ -238,12 +265,12 @@
             document.body.appendChild(textContainer);
 
             textContainer.addEventListener('click', function(event) {
-                event.stopPropagation(); 
+                event.stopPropagation();
                 if (selectedElement) {
-                    selectedElement.classList.remove('selected'); 
+                    selectedElement.classList.remove('selected');
                 }
                 selectedElement = textContainer;
-                selectedElement.classList.add('selected'); 
+                selectedElement.classList.add('selected');
                 textInput.focus();
                 textInput.select();
             });
@@ -265,10 +292,11 @@
         document.getElementById('addTask2Button').addEventListener('click', function() {
             const position = findAvailablePosition();
 
+            // Верхний элемент
             const stickContainerTop = document.createElement('div');
             stickContainerTop.classList.add('stick-container');
-            stickContainerTop.style.left = `${position}px`; 
-            stickContainerTop.style.top = '180px'; 
+            stickContainerTop.style.left = `${position}px`;
+            stickContainerTop.style.top = '180px'; // 220px выше линии
 
             const squareTop = document.createElement('textarea');
             squareTop.classList.add('square');
@@ -277,14 +305,44 @@
             const stickTop = document.createElement('div');
             stickTop.classList.add('stick');
 
+            const buttonGroupTop = document.createElement('div');
+            buttonGroupTop.classList.add('button-group');
+            buttonGroupTop.style.position = 'absolute';
+            buttonGroupTop.style.left = '0'; // На линии
+            buttonGroupTop.style.top = '50%'; // Центрируем по вертикали
+            buttonGroupTop.style.transform = 'translateY(-50%) rotate(45deg)'; // Поворачиваем с линией
+            buttonGroupTop.style.display = 'flex';
+            buttonGroupTop.style.width = '290px'; // Соответствует длине палки
+            buttonGroupTop.style.justifyContent = 'space-between'; // Равномерное распределение
+
+            for (let i = 0; i < 3; i++) {
+                const button = document.createElement('button');
+                button.classList.add('add-input-button');
+                button.textContent = '+';
+                button.dataset.index = i; // Добавляем индекс для уникальности
+                button.addEventListener('click', function(e) {
+                    const x = document.createElement("INPUT");
+                    x.setAttribute("type", "text");
+                    x.setAttribute("value", "введите текст...");
+                    x.style.position = 'absolute';
+                    // Сдвигаем каждое поле ввода вниз в зависимости от индекса кнопки
+                    x.style.top = `${parseInt(stickContainerTop.style.top) + 80 + (i * 30)}px`; 
+                    x.style.left = `${parseInt(stickContainerTop.style.left) - 150}px`; // Слева от линии
+                    document.body.appendChild(x);
+                });
+                buttonGroupTop.appendChild(button);
+            }
+
             stickContainerTop.appendChild(squareTop);
             stickContainerTop.appendChild(stickTop);
+            stickContainerTop.appendChild(buttonGroupTop);
             document.body.appendChild(stickContainerTop);
 
+            // Нижний элемент
             const stickContainerBottom = document.createElement('div');
-            stickContainerBottom.classList.add('stick-container', 'mirror');
-            stickContainerBottom.style.left = `${position}px`; 
-            stickContainerBottom.style.top = '520px'; 
+            stickContainerBottom.classList.add('stick-container', 'bottom');
+            stickContainerBottom.style.left = `${position}px`;
+            stickContainerBottom.style.top = '620px'; 
 
             const squareBottom = document.createElement('textarea');
             squareBottom.classList.add('square');
@@ -293,8 +351,37 @@
             const stickBottom = document.createElement('div');
             stickBottom.classList.add('stick');
 
+            const buttonGroupBottom = document.createElement('div');
+            buttonGroupBottom.classList.add('button-group');
+            buttonGroupBottom.style.position = 'absolute';
+            buttonGroupBottom.style.left = '0'; // На линии
+            buttonGroupBottom.style.top = '50%'; // Центрируем по вертикали
+            buttonGroupBottom.style.transform = 'translateY(-50%) rotate(-45deg)'; // Поворачиваем с линией
+            buttonGroupBottom.style.display = 'flex';
+            buttonGroupBottom.style.width = '290px'; // Соответствует длине палки
+            buttonGroupBottom.style.justifyContent = 'space-between'; // Равномерное распределение
+
+            for (let i = 0; i < 3; i++) {
+                const button = document.createElement('button');
+                button.classList.add('add-input-button');
+                button.textContent = '+';
+                button.dataset.index = i; // Добавляем индекс для уникальности
+                button.addEventListener('click', function(e) {
+                    const x = document.createElement("INPUT");
+                    x.setAttribute("type", "text");
+                    x.setAttribute("value", "введите текст...");
+                    x.style.position = 'absolute';
+                    // Сдвигаем каждое поле ввода вверх в зависимости от индекса кнопки
+                    x.style.top = `${parseInt(stickContainerBottom.style.top) - 20 - (i * 30)}px`; 
+                    x.style.left = `${parseInt(stickContainerBottom.style.left) - 150}px`; // Слева от линии
+                    document.body.appendChild(x);
+                });
+                buttonGroupBottom.appendChild(button);
+            }
+
             stickContainerBottom.appendChild(squareBottom);
             stickContainerBottom.appendChild(stickBottom);
+            stickContainerBottom.appendChild(buttonGroupBottom);
             document.body.appendChild(stickContainerBottom);
 
             const backgroundColor = document.getElementById('backgroundColorPicker').value;
@@ -302,39 +389,37 @@
             squareBottom.style.backgroundColor = backgroundColor;
 
             stickContainerTop.addEventListener('click', function(event) {
-                event.stopPropagation(); 
+                event.stopPropagation();
                 if (selectedElement) {
-                    selectedElement.classList.remove('selected'); 
+                    selectedElement.classList.remove('selected');
                 }
                 selectedElement = stickContainerTop;
-                selectedElement.classList.add('selected'); 
+                selectedElement.classList.add('selected');
             });
 
             stickContainerBottom.addEventListener('click', function(event) {
-                event.stopPropagation(); 
+                event.stopPropagation();
                 if (selectedElement) {
-                    selectedElement.classList.remove('selected'); 
+                    selectedElement.classList.remove('selected');
                 }
                 selectedElement = stickContainerBottom;
-                selectedElement.classList.add('selected'); 
+                selectedElement.classList.add('selected');
             });
         });
 
-        
         document.getElementById('deleteTask2Button').addEventListener('click', function() {
             if (selectedElement && selectedElement.classList.contains('stick-container')) {
-                // Удаляем позицию из массива
                 const position = parseInt(selectedElement.style.left);
                 const index = task2Positions.indexOf(position);
                 if (index !== -1) {
                     task2Positions.splice(index, 1);
                 }
 
-                const mirrorElement = document.querySelector(`.stick-container[style*="left: ${position}px"].mirror`);
-                if (mirrorElement) {
-                    mirrorElement.remove();
+                const otherElement = document.querySelector(`.stick-container[style*="left: ${position}px"]:not(.${selectedElement.className.split(' ').join('.')})`);
+                if (otherElement) {
+                    otherElement.remove();
                 }
-                selectedElement.remove(); 
+                selectedElement.remove();
                 selectedElement = null;
             } else {
                 alert('Сначала выберите задачу2 для удаления!');
@@ -359,7 +444,7 @@
 
         document.getElementById('deleteBoneButton').addEventListener('click', function() {
             if (selectedElement && selectedElement.classList.contains('text-container')) {
-                selectedElement.remove(); 
+                selectedElement.remove();
                 selectedElement = null;
             } else {
                 alert('Сначала выберите кость для удаления!');
